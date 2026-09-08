@@ -18,7 +18,7 @@ import {
   _resetRegistry,
   initAgentRegistry,
 } from '../lib/hydra-agents.mjs';
-import { AFFINITY_PRESETS, loadHydraConfig, saveHydraConfig } from '../lib/hydra-config.mjs';
+import { AFFINITY_PRESETS } from '../lib/hydra-config.mjs';
 
 const CLOUD_AGENT_NAMES = ['claude', 'gemini', 'codex'];
 
@@ -464,14 +464,11 @@ test('each AFFINITY_PRESETS entry covers all 10 task types with numbers', () => 
 import { describe, it, beforeEach, afterEach } from 'node:test';
 
 describe('initAgentRegistry — custom physical agents', () => {
-  let originalAgentsCfg;
+  let testConfig;
 
   beforeEach(() => {
-    const cfg = loadHydraConfig();
-    originalAgentsCfg = cfg.agents;
-    saveHydraConfig({
+    testConfig = {
       agents: {
-        ...cfg.agents,
         customAgents: [
           {
             name: 'test-cli-agent',
@@ -508,13 +505,12 @@ describe('initAgentRegistry — custom physical agents', () => {
           },
         ],
       },
-    });
+    };
     _resetRegistry();
-    initAgentRegistry();
+    initAgentRegistry(testConfig);
   });
 
   afterEach(() => {
-    saveHydraConfig({ agents: originalAgentsCfg });
     _resetRegistry();
     initAgentRegistry();
   });
@@ -548,19 +544,13 @@ describe('initAgentRegistry — custom physical agents', () => {
 
   it('entry with invalid type is silently skipped', () => {
     // The beforeEach fixture only has valid entries, so we add a bad one inline
-    const cfg = loadHydraConfig();
     const withBadEntry = [
-      ...(cfg.agents?.customAgents || []),
+      ...testConfig.agents.customAgents,
       { name: 'bad-type-agent', type: 'invalid', displayName: 'Bad' },
     ];
-    saveHydraConfig({ agents: { ...cfg.agents, customAgents: withBadEntry } });
     _resetRegistry();
-    initAgentRegistry();
+    initAgentRegistry({ agents: { customAgents: withBadEntry } });
 
     assert.equal(getAgent('bad-type-agent'), null, 'invalid type should be silently skipped');
-    // Cleanup (afterEach will also restore, but be explicit)
-    saveHydraConfig({ agents: cfg.agents });
-    _resetRegistry();
-    initAgentRegistry();
   });
 });

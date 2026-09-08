@@ -9,10 +9,10 @@
       "active": "default"
     },
     "codex": {
-      "default": "gpt-6-astra",
+      "default": "gpt-5.6-sol",
       "fast": "gpt-5.6-luna",
       "cheap": "gpt-5.6-luna",
-      "active": "default"
+      "active": "gpt-5.6-sol"
     },
     "claude": {
       "default": "opus",

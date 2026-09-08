@@ -410,10 +410,10 @@ test('classifyPrompt detects review and fix as tandem indicator', () => {
 test('selectTandemPair returns correct pair for each task type', () => {
   const pairs = {
     planning: { lead: 'claude', follow: 'codex' },
-    architecture: { lead: 'claude', follow: 'gemini' },
-    review: { lead: 'gemini', follow: 'claude' },
-    testing: { lead: 'codex', follow: 'gemini' },
-    security: { lead: 'gemini', follow: 'claude' },
+    architecture: { lead: 'claude', follow: 'codex' },
+    review: { lead: 'claude', follow: 'codex' },
+    testing: { lead: 'codex', follow: 'claude' },
+    security: { lead: 'claude', follow: 'codex' },
   };
   for (const [taskType, expected] of Object.entries(pairs)) {
     const result = selectTandemPair(taskType, 'claude');

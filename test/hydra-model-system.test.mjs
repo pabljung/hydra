@@ -1,5 +1,6 @@
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { once } from 'node:events';
 
 import {
   detectInstalledCLIs,
@@ -8,14 +9,13 @@ import {
 import { parseCodexModelCatalog, parseCodexModelCapabilities } from '../lib/hydra-models.mjs';
 import {
   _resetRegistry,
-  getActiveModel,
   getAgent,
   initAgentRegistry,
   resolveModelId,
 } from '../lib/hydra-agents.mjs';
 import { registerBuiltInSubAgents } from '../lib/hydra-sub-agents.mjs';
 import { mergeWithDefaults } from '../lib/hydra-config.mjs';
-import { buildCliInvocation, isSafeModelId } from '../lib/hydra-shared/agent-executor.mjs';
+import { buildCliInvocation, isSafeModelId, spawnCliInvocation } from '../lib/hydra-shared/agent-executor.mjs';
 import { resolveCouncilAgents, resolveCouncilFlow, synthesizeCouncilTranscript } from '../lib/hydra-council.mjs';
 
 beforeEach(() => {
@@ -106,7 +106,7 @@ describe('model discovery and permissive selection', () => {
   it('resolves current convenience aliases without changing explicit IDs', () => {
     assert.equal(resolveModelId('codex', 'sol'), 'gpt-5.6-sol');
     assert.equal(resolveModelId('claude', 'sonnet'), 'sonnet');
-    assert.equal(getActiveModel('codex'), 'gpt-6-astra');
+    assert.equal(resolveModelId('codex', 'gpt-5.6-sol'), 'gpt-5.6-sol');
   });
 
   it('accepts shell-safe custom IDs and rejects control characters', () => {
@@ -124,10 +124,52 @@ describe('headless and worker invocation', () => {
       permissionMode: 'read-only',
     });
     assert.equal(invocation.cmd, 'codex');
-    assert.deepEqual(invocation.args.slice(0, 4), ['exec', '-', '-s', 'read-only']);
+    assert.deepEqual(invocation.args.slice(0, 4), ['exec', '-', '--sandbox', 'read-only']);
     assert.ok(invocation.args.includes('future-model-2030'));
     assert.ok(invocation.args.includes('model_reasoning_effort="high"'));
     assert.ok(!invocation.args.includes('--reasoning-effort'));
+  });
+
+  it('uses the current Codex auto-edit flag and exact TOML reasoning value', () => {
+    const invocation = buildCliInvocation('codex', 'test prompt', {
+      cwd: 'C:/work',
+      modelOverride: 'gpt-5.6-sol',
+      reasoningEffort: 'high',
+      permissionMode: 'auto-edit',
+    });
+    assert.deepEqual(invocation.args, [
+      'exec', '-', '--approve-for-me',
+      '-C', 'C:/work',
+      '--model', 'gpt-5.6-sol',
+      '--config', 'model_reasoning_effort="high"',
+      '--json',
+    ]);
+    assert.equal(invocation.args.includes('--full-auto'), false);
+  });
+
+  it('reserves the current unrestricted Codex flag for explicit full-auto mode', () => {
+    const invocation = buildCliInvocation('codex', 'test prompt', {
+      permissionMode: 'full-auto',
+    });
+    assert.ok(invocation.args.includes('--dangerously-bypass-approvals-and-sandbox'));
+    assert.equal(invocation.args.includes('--approve-for-me'), false);
+  });
+
+  it('spawns a portable direct argv with shell disabled', async () => {
+    const invocation = {
+      cmd: process.execPath,
+      args: ['-e', 'process.stdout.write("portable-spawn-ok")'],
+    };
+    const child = spawnCliInvocation(invocation, {
+      windowsHide: true,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let stdout = '';
+    child.stdout.setEncoding('utf8');
+    child.stdout.on('data', (chunk) => { stdout += chunk; });
+    const [code] = await once(child, 'close');
+    assert.equal(code, 0);
+    assert.equal(stdout, 'portable-spawn-ok');
   });
 
   it('sends the effective Claude alias shown by Hydra', () => {
@@ -144,6 +186,10 @@ describe('headless and worker invocation', () => {
 });
 
 describe('defaults and explicit configuration', () => {
+  it('keeps the generated Codex default independent from the active user config', () => {
+    assert.equal(mergeWithDefaults({}).models.codex.default, 'gpt-6-astra');
+  });
+
   it('preserves explicit user model, alias, role, and recommendation values', () => {
     const merged = mergeWithDefaults({
       models: { codex: { default: 'my-default', active: 'my-selected' } },
