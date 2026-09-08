@@ -3,6 +3,11 @@
 > Last updated: March 6, 2026
 > Purpose: Inform default model assignments, roster recommendations, and smart-mode routing across all Hydra positions.
 
+> **Historical benchmark snapshot:** identifiers and prices below are retained as
+> compatibility/reference data only. They are not an execution allowlist and do not
+> define current defaults. Runtime Codex choices come from `codex debug models`;
+> Claude uses stable CLI aliases or explicit user configuration.
+
 ---
 
 ## Table of Contents

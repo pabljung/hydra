@@ -46,17 +46,17 @@ No linter or build step — pure ESM, runs directly with Node.js.
 
 ## Architecture
 
-Hydra orchestrates three AI coding agents (Claude Code CLI, Gemini CLI, Codex CLI) through a shared HTTP daemon with task queue, intelligent routing, and multiple dispatch modes.
+Hydra orchestrates available AI coding agents through a shared HTTP daemon with task queue, intelligent routing, and multiple dispatch modes. Claude Code and Codex form the default installation; Gemini remains optional.
 
 ### Core Flow
 
 ```
 Operator Console (REPL)
-    ├── Concierge (multi-provider streaming: OpenAI → Anthropic → Google fallback)
+    ├── Concierge (configurable provider fallback)
     └── Daemon (HTTP API, port 4173, event-sourced state)
-         ├── Gemini  (analyst role, gemini-3.1-pro-preview)
-         ├── Codex   (implementer role, gpt-5.4)
-         └── Claude  (architect role, claude-opus-4-6)
+         ├── Claude  (architect and analyst roles; stable CLI aliases)
+         ├── Codex   (implementer and investigator roles; CLI catalog)
+         └── Gemini  (optional; resolved through fallback when unavailable)
 ```
 
 > For full module reference, dispatch modes, route strategies, and architectural patterns, see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
@@ -68,7 +68,7 @@ Operator Console (REPL)
 - **Agent names** are always lowercase strings: `claude`, `gemini`, `codex`, `local`, plus any user-defined names from `agents.customAgents[]`. `local` is the 4th built-in physical agent (API-backed via `hydra-local.mjs`, no CLI). Custom agents are registered via `:agents add` (wizard) or directly in `hydra.config.json`; type `cli` spawns a local CLI tool, type `api` calls an OpenAI-compatible endpoint. CLI agents missing from PATH fall back to cloud transparently via `executeAgentWithRecovery`. Config: `agents.customAgents[]` (see `hydra-agents-wizard.mjs`), `local.enabled`, `.baseUrl`, `.model`, `.budgetGate`. `routing.mode` (`economy`|`balanced`|`performance`) shifts affinity toward `local` in economy mode.
 - **HTTP helpers**: Use `request()` from `hydra-utils.mjs` for daemon calls. Status bar uses `fetch()` directly (lightweight polling).
 - **Config access**: `loadHydraConfig()` returns cached config. `getRoleConfig(roleName)` for role-specific model/agent lookups.
-- **Model references**: Config-driven via `roles` and `models` sections in `hydra-config.mjs`. Don't hardcode model IDs — use `getActiveModel(agent)` or `getRoleConfig(role)`. Codex always requires an explicit `--model` flag (its own `~/.codex/config.toml` may differ from Hydra's config).
+- **Model references**: Config-driven via `roles` and `models` sections in `hydra-config.mjs`. Don't hardcode model IDs — use `getActiveModel(agent)` or `getRoleConfig(role)`. Model IDs are permissive; aliases are conveniences, not validation. Codex models are discovered with the structured `codex debug models` catalog when available. Claude Code has no stable list command, so Hydra uses stable aliases/configuration and lets the CLI validate explicit IDs.
 - **Interactive prompts**: Use `promptChoice()` from `hydra-prompt-choice.mjs` with cooperative readline lock. Boxes dynamically size to terminal width (60-120 columns, 90% of terminal width) and word-wrap long context values.
 - **PowerShell launchers** in `bin/` — `hydra.ps1` starts the full system (daemon + agent heads + operator).
 
@@ -87,12 +87,13 @@ Integration tests (`*.integration.test.mjs`) spin up the daemon on an ephemeral 
 
 Two MCP servers are available when working in this project. Use them to get second opinions, delegate work, or cross-verify your reasoning.
 
-### `hydra_ask` — Ask Gemini or Codex directly
+### `hydra_ask` — Ask Claude, Gemini, or Codex directly
 
 Invokes the agent CLI headlessly. No daemon needed.
 
-- **`agent: "gemini"`** — Gemini 3 Pro. Best for: code review, architecture critique, analysis, research, identifying edge cases, security review.
-- **`agent: "codex"`** — Codex (GPT-5.4). Best for: implementation, refactoring, code generation, writing tests, quick prototyping.
+- **`agent: "claude"`** — Claude Code. Best for: architecture, review, analysis, research, and documentation.
+- **`agent: "gemini"`** — Optional Gemini reviewer when its CLI is installed.
+- **`agent: "codex"`** — Codex. Best for: implementation, refactoring, investigation, code generation, and tests.
 
 **When to use:**
 - Reviewing your own generated code for bugs or missed edge cases

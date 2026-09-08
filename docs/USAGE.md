@@ -113,20 +113,21 @@ node lib/hydra-models.mjs claude
 
 **Interactive model selector** (`model:select` / `:model:select`):
 1. Pick an agent (or pass agent name to skip)
-2. Browse all available models — discovered via REST API, CLI query, or config fallback
+2. Browse available models — Codex uses its structured CLI catalog; other providers use their API when credentials are available, then config fallback
 3. Type to filter the model list
-4. Select reasoning effort level (low / medium / high / xhigh)
+4. Select a reasoning effort level supported by the selected CLI
 5. Selection sets mode to `custom` and persists to `hydra.config.json`
 
-**Shorthand aliases:**
-- Gemini: `pro`, `flash`, `default`, `fast`
-- Codex: `gpt-5`, `gpt-5.4`, `gpt-5.2-codex`, `o4-mini`, `default`, `fast`, `cheap`
-- Claude: `opus`, `sonnet`, `haiku`, `default`, `fast`, `cheap`
+**Bundled convenience aliases:**
+- Codex: `frontier`, `astra`, `sol`, `terra`, `luna`, plus `default`, `fast`, `cheap`
+- Claude Code: stable CLI aliases `opus`, `sonnet`, `fable`, plus `default`, `fast`, `cheap`
+- Gemini: legacy aliases remain configurable for installations that use Gemini
 
-Legacy Codex aliases `codex-5.2` and `gpt-5.2-codex` are auto-normalized to `gpt-5.2-codex`. The default is now `gpt-5.4`.
+Aliases are conveniences, not an allowlist. Any non-empty, shell-safe model ID can be configured or selected and is passed unchanged to the CLI. Explicit user aliases and selections take precedence over bundled defaults.
 
-**Reasoning effort** (Codex only — passed as `--reasoning-effort` CLI flag):
-- Levels: `low`, `medium`, `high`, `xhigh`
+**Reasoning effort:**
+- Codex receives it through `--config model_reasoning_effort="<level>"`
+- Claude Code receives it through `--effort <level>`
 - Set via interactive picker or config: `models.<agent>.reasoningEffort`
 - Shown in `:model` display, model listings, and status bar
 
@@ -191,7 +192,7 @@ node lib/hydra-operator.mjs prompt="..." # One-shot mode
 
 ### Concierge
 
-The concierge is a multi-provider conversational AI layer with automatic fallback: OpenAI → Anthropic → Google. It is **active by default** — every prompt goes through the concierge before anything else.
+The concierge is a multi-provider conversational AI layer with a configurable fallback chain. The bundled chain is OpenAI → Anthropic; Google remains optional. It is **active by default** — every prompt goes through the concierge before anything else.
 
 **Behavior:**
 - Questions and discussion are answered directly by the concierge (no agent dispatch)
@@ -202,7 +203,7 @@ The concierge is a multi-provider conversational AI layer with automatic fallbac
 - On dispatch, conversation context (last 3 messages) is included so agents understand why
 
 **Visual indicators:**
-- Prompt shows active model: `hydra⬢[gpt-5]>` (or `hydra⬢[sonnet ↓]>` for fallback)
+- Prompt shows active model: `hydra⬢[luna]>` (or `hydra⬢[fable ↓]>` for fallback)
 - Status bar mode icon shows `⬢` (chat mode)
 - Concierge responses are streamed in blue with cost estimate `[~$0.0042]`
 - Welcome message on first activation shows model, quick help, and available commands
@@ -225,8 +226,8 @@ The concierge is a multi-provider conversational AI layer with automatic fallbac
 
 - **auto** (default): Runs a mini-round triage, then either delegates via handoff or escalates to full council
 - **handoff**: Direct delegation to all agents (fastest, no triage)
-- **council**: Full multi-round deliberation with structured synthesis (Claude propose -> Gemini critique -> Claude refine -> Codex implement)
-- **dispatch**: Headless pipeline (Claude coordinate -> Gemini critique -> Codex synthesize)
+- **council**: Full multi-round deliberation with preferred participants resolved to installed backends
+- **dispatch**: Headless pipeline (Claude coordinate -> installed reviewer -> Codex synthesize)
 - **smart**: Auto-selects model tier per prompt complexity (simple->economy, medium->balanced, complex->performance)
 - **chat**: Concierge conversation mode (set automatically when concierge is active)
 
@@ -302,31 +303,12 @@ Exit code: 0 if normal/warning, 1 if critical.
   "version": 2,
   "mode": "performance",
   "models": {
-    "gemini": {
-      "default": "gemini-2.5-pro",
-      "fast": "gemini-2.5-flash",
-      "cheap": "gemini-2.5-flash",
-      "active": "default"
-    },
-    "codex": {
-      "default": "gpt-5.4",
-      "fast": "o4-mini",
-      "cheap": "o4-mini",
-      "active": "default",
-      "reasoningEffort": null
-    },
-    "claude": {
-      "default": "claude-opus-4-6",
-      "fast": "claude-sonnet-4-5-20250929",
-      "cheap": "claude-haiku-4-5-20251001",
-      "active": "default",
-      "reasoningEffort": null
-    }
+    "codex": { "default": "gpt-6-astra", "fast": "gpt-5.6-luna", "cheap": "gpt-5.6-luna", "active": "default" },
+    "claude": { "default": "opus", "fast": "sonnet", "cheap": "sonnet", "active": "default" }
   },
   "aliases": {
-    "gemini": { "pro": "gemini-2.5-pro", "flash": "gemini-2.5-flash" },
-    "codex": { "gpt5": "gpt-5", "gpt-5": "gpt-5", "gpt-5.4": "gpt-5.4", "gpt-5.2-codex": "gpt-5.2-codex", "codex-5.2": "gpt-5.2-codex", "o4-mini": "o4-mini" },
-    "claude": { "opus": "claude-opus-4-6", "sonnet": "claude-sonnet-4-5-20250929", "haiku": "claude-haiku-4-5-20251001" }
+    "codex": { "frontier": "gpt-6-astra", "astra": "gpt-6-astra", "sol": "gpt-5.6-sol", "terra": "gpt-5.6-terra", "luna": "gpt-5.6-luna" },
+    "claude": { "opus": "opus", "sonnet": "sonnet", "fable": "fable" }
   },
   "modeTiers": {
     "performance": { "gemini": "default", "codex": "default", "claude": "default" },
@@ -338,10 +320,7 @@ Exit code: 0 if normal/warning, 1 if critical.
     "warningThresholdPercent": 80,
     "criticalThresholdPercent": 90,
     "claudeStatsPath": "auto",
-    "dailyTokenBudget": {
-      "claude-opus-4-6": 2000000,
-      "claude-sonnet-4-5-20250929": 5000000
-    }
+    "dailyTokenBudget": {}
   },
   "verification": {
     "onTaskDone": true,
@@ -353,14 +332,13 @@ Exit code: 0 if normal/warning, 1 if critical.
   },
   "concierge": {
     "enabled": true,
-    "model": "gpt-5",
+    "model": "gpt-5.6-luna",
     "reasoningEffort": "xhigh",
     "maxHistoryMessages": 40,
     "autoActivate": true,
     "fallbackChain": [
-      { "provider": "openai", "model": "gpt-5" },
-      { "provider": "anthropic", "model": "claude-sonnet-4-5-20250929" },
-      { "provider": "google", "model": "gemini-2.5-flash" }
+      { "provider": "openai", "model": "gpt-5.6-luna" },
+      { "provider": "anthropic", "model": "claude-sonnet-5" }
     ],
     "showProviderInPrompt": true,
     "welcomeMessage": true
@@ -384,7 +362,7 @@ Exit code: 0 if normal/warning, 1 if critical.
     "pairings": {
       "gemini": "claude",
       "codex": "claude",
-      "claude": "gemini"
+      "claude": "codex"
     }
   },
   "mcp": {
@@ -499,7 +477,7 @@ pwsh -File bin/hydra.ps1 [-Prompt "..."]
 
 This starts:
 1. Daemon (if not running)
-2. Three agent head terminals (Gemini, Codex, Claude)
+2. One head terminal per installed CLI (for example Codex and Claude; Gemini is optional)
 3. Operator console
 
 One-shot mode: `pwsh -File bin/hydra.ps1 -Prompt "Your objective"`

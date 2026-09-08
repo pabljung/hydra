@@ -3,21 +3,21 @@
   "mode": "performance",
   "models": {
     "gemini": {
-      "default": "gemini-3.1-pro-preview",
-      "fast": "gemini-3-flash-preview",
-      "cheap": "gemini-3-flash-preview",
+      "default": null,
+      "fast": null,
+      "cheap": null,
       "active": "default"
     },
     "codex": {
-      "default": "gpt-5.4",
-      "fast": "o4-mini",
-      "cheap": "o4-mini",
-      "active": "gpt-5.4"
+      "default": "gpt-6-astra",
+      "fast": "gpt-5.6-luna",
+      "cheap": "gpt-5.6-luna",
+      "active": "default"
     },
     "claude": {
-      "default": "claude-sonnet-4-6",
-      "fast": "claude-sonnet-4-5-20250929",
-      "cheap": "claude-haiku-4-5-20251001",
+      "default": "opus",
+      "fast": "sonnet",
+      "cheap": "sonnet",
       "active": "default"
     }
   },
@@ -31,18 +31,16 @@
       "3-flash": "gemini-3-flash-preview"
     },
     "codex": {
-      "gpt5": "gpt-5",
-      "gpt-5": "gpt-5",
-      "gpt-5.2-codex": "gpt-5.2-codex",
-      "codex-5.2": "gpt-5.2-codex",
-      "5.2-codex": "gpt-5.2-codex",
-      "o4-mini": "o4-mini",
-      "o4mini": "o4-mini"
+      "frontier": "gpt-6-astra",
+      "astra": "gpt-6-astra",
+      "sol": "gpt-5.6-sol",
+      "terra": "gpt-5.6-terra",
+      "luna": "gpt-5.6-luna"
     },
     "claude": {
-      "opus": "claude-opus-4-6",
-      "sonnet": "claude-sonnet-4-5-20250929",
-      "haiku": "claude-haiku-4-5-20251001"
+      "opus": "opus",
+      "sonnet": "sonnet",
+      "fable": "fable"
     }
   },
   "modeTiers": {
@@ -71,20 +69,11 @@
     "warningThresholdPercent": 80,
     "criticalThresholdPercent": 90,
     "claudeStatsPath": "auto",
-    "dailyTokenBudget": {
-      "claude-opus-4-6": 5000000,
-      "claude-sonnet-4-5-20250929": 15000000
-    },
-    "weeklyTokenBudget": {
-      "claude-opus-4-6": 25000000,
-      "claude-sonnet-4-5-20250929": 75000000
-    },
+    "dailyTokenBudget": {},
+    "weeklyTokenBudget": {},
     "plan": "max_20x",
     "windowHours": 5,
-    "windowTokenBudget": {
-      "claude-opus-4-6": 2500000,
-      "claude-sonnet-4-5-20250929": 7500000
-    },
+    "windowTokenBudget": {},
     "sessionBudget": 5000000,
     "perTaskBudget": 500000,
     "perAgentBudget": {
@@ -105,24 +94,38 @@
   },
   "concierge": {
     "enabled": true,
-    "model": "gpt-5",
+    "model": "gpt-5.6-luna",
     "reasoningEffort": "xhigh",
     "maxHistoryMessages": 40,
     "autoActivate": true,
     "showProviderInPrompt": true,
     "welcomeMessage": true,
+    "aliases": {
+      "luna": {
+        "provider": "openai",
+        "model": "gpt-5.6-luna"
+      },
+      "opus": {
+        "provider": "anthropic",
+        "model": "claude-opus-5"
+      },
+      "sonnet": {
+        "provider": "anthropic",
+        "model": "claude-sonnet-5"
+      },
+      "fable": {
+        "provider": "anthropic",
+        "model": "claude-fable-5-1"
+      }
+    },
     "fallbackChain": [
       {
         "provider": "openai",
-        "model": "gpt-5"
+        "model": "gpt-5.6-luna"
       },
       {
         "provider": "anthropic",
-        "model": "claude-sonnet-4-5-20250929"
-      },
-      {
-        "provider": "google",
-        "model": "gemini-3-flash-preview"
+        "model": "claude-sonnet-5"
       }
     ]
   },
@@ -142,7 +145,7 @@
       "reasoningEffort": null
     },
     "analyst": {
-      "agent": "gemini",
+      "agent": "claude",
       "model": null,
       "reasoningEffort": null
     },
@@ -153,70 +156,69 @@
     },
     "concierge": {
       "agent": "codex",
-      "model": "gpt-5",
+      "model": "gpt-5.6-luna",
       "reasoningEffort": null
     },
     "investigator": {
       "agent": "codex",
-      "model": "gpt-5.2",
-      "reasoningEffort": null
+      "model": "gpt-6-astra",
+      "reasoningEffort": "high"
     },
     "nightlyHandoff": {
       "agent": "codex",
-      "model": "o4-mini",
+      "model": "gpt-5.6-luna",
       "reasoningEffort": "low"
     }
   },
   "recommendations": {
     "architect": {
       "models": [
-        "claude-sonnet-4-6",
-        "claude-opus-4-6",
-        "gpt-5.4"
+        "opus",
+        "sonnet"
       ],
       "reasoningEffort": null,
-      "note": "Strong coding + agentic at 40% lower cost than Opus; Opus available for highest-complexity tasks"
+      "note": "Claude Code aliases track the models available to the installed CLI."
     },
     "analyst": {
       "models": [
-        "gemini-3.1-pro-preview",
-        "claude-opus-4-6"
+        "opus",
+        "sonnet"
       ],
       "reasoningEffort": null,
-      "note": "Latest SOTA reasoning model, GPQA 91.9%, 1M native context"
+      "note": "Defaults to Claude so analysis works when Gemini is not installed."
     },
     "implementer": {
       "models": [
-        "gpt-5.4",
-        "gpt-5.3-codex",
-        "claude-sonnet-4-5-20250929"
+        "gpt-6-astra",
+        "gpt-5.6-sol",
+        "gpt-5.6-terra"
       ],
       "reasoningEffort": null,
-      "note": "SWE-Bench Pro 57.7%, 1.05M context, reasoning effort control (none→xhigh)"
+      "note": "Uses models reported by the installed Codex CLI structured catalog."
     },
     "concierge": {
       "models": [
-        "gpt-5",
-        "claude-sonnet-4-5-20250929"
+        "gpt-5.6-luna",
+        "claude-sonnet-5"
       ],
       "reasoningEffort": null,
-      "note": "Fast streaming, broad knowledge, $1.25/$10 (GPT-5 has no reasoning control)"
+      "note": "Fast current models for direct API concierge providers."
     },
     "investigator": {
       "models": [
-        "gpt-5.2",
-        "gpt-5"
+        "gpt-6-astra",
+        "gpt-5.6-sol"
       ],
-      "reasoningEffort": null,
-      "note": "Best deep reasoning (GPQA 93.2%, FrontierMath 40.3%)"
+      "reasoningEffort": "high",
+      "note": "High-effort Codex CLI diagnosis with model recovery."
     },
     "nightlyHandoff": {
       "models": [
-        "o4-mini",
-        "gpt-5"
+        "gpt-5.6-luna",
+        "gpt-5.6-terra"
       ],
       "reasoningEffort": "low",
-      "note": "Budget-friendly, SWE-bench 68.1%, o4-mini supports low/medium/high effort"
+      "note": "Fast Codex models confirmed by the installed CLI catalog."
     }
   },
   "agents": {
@@ -233,6 +235,25 @@
     },
     "custom": {},
     "customAgents": [],
+    "fallbacks": {
+      "gemini": [
+        "claude",
+        "codex"
+      ],
+      "claude": [
+        "codex",
+        "gemini"
+      ],
+      "codex": [
+        "claude",
+        "gemini"
+      ],
+      "local": [
+        "codex",
+        "claude",
+        "gemini"
+      ]
+    },
     "affinityLearning": {
       "enabled": true,
       "decayFactor": 0.9,
@@ -275,7 +296,8 @@
     "baseBranch": "dev",
     "investigator": {
       "enabled": true,
-      "model": "gpt-5.2",
+      "agent": "codex",
+      "model": "gpt-6-astra",
       "reasoningEffort": "high",
       "maxAttemptsPerPhase": 2,
       "phases": [
@@ -349,7 +371,7 @@
       "aiDiscovery": true
     },
     "aiDiscovery": {
-      "agent": "gemini",
+      "agent": "claude",
       "maxSuggestions": 5,
       "focus": [],
       "timeoutMs": 300000
@@ -360,7 +382,7 @@
       "perTaskEstimate": 80000,
       "handoffThreshold": 0.7,
       "handoffAgent": "codex",
-      "handoffModel": "o4-mini"
+      "handoffModel": "gpt-5.6-luna"
     },
     "tasks": [],
     "investigator": {
@@ -450,7 +472,7 @@
   },
   "modelRecovery": {
     "enabled": true,
-    "autoPersist": true,
+    "autoPersist": false,
     "headlessFallback": true,
     "circuitBreaker": {
       "enabled": true,

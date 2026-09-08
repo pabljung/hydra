@@ -165,11 +165,10 @@ describe('getFallbackCandidates', () => {
 
   it('returns empty array when all presets match failed model', () => {
     // Create a scenario where the failed model matches all presets
-    // codex default is gpt-5.4, fast and cheap are both o4-mini
-    // If we fail on o4-mini AND gpt-5.2-codex is somehow also excluded... let's just test with a model
+    // Use a legacy model ID to verify compatibility candidates remain available.
     // that happens to be all presets
     const candidates = getFallbackCandidates('codex', 'gpt-5.2-codex');
-    // Should still have o4-mini variants
+    // Should still have configured alternatives.
     assert.ok(candidates.length > 0);
   });
 

@@ -16,14 +16,14 @@ import {
 const ALL_AGENTS = ['claude', 'gemini', 'codex'];
 const EXPECTED_TANDEM_PAIRS = {
   planning: { lead: 'claude', follow: 'codex' },
-  architecture: { lead: 'claude', follow: 'gemini' },
-  review: { lead: 'gemini', follow: 'claude' },
+  architecture: { lead: 'claude', follow: 'codex' },
+  review: { lead: 'claude', follow: 'codex' },
   refactor: { lead: 'claude', follow: 'codex' },
   implementation: { lead: 'claude', follow: 'codex' },
-  analysis: { lead: 'gemini', follow: 'claude' },
-  testing: { lead: 'codex', follow: 'gemini' },
-  security: { lead: 'gemini', follow: 'claude' },
-  research: { lead: 'gemini', follow: 'claude' },
+  analysis: { lead: 'claude', follow: 'codex' },
+  testing: { lead: 'codex', follow: 'claude' },
+  security: { lead: 'claude', follow: 'codex' },
+  research: { lead: 'claude', follow: 'codex' },
   documentation: { lead: 'claude', follow: 'codex' },
 };
 
@@ -222,7 +222,7 @@ describe('classifyPrompt route strategy', () => {
     const result = classifyPrompt('first analyze the auth module then fix the security issues');
 
     assert.equal(result.routeStrategy, 'tandem');
-    assert.deepEqual(result.tandemPair, { lead: 'gemini', follow: 'claude' });
+    assert.deepEqual(result.tandemPair, { lead: 'claude', follow: 'codex' });
   });
 
   it('routes a strategic multi-objective prompt through the council path', () => {
@@ -454,7 +454,7 @@ describe('dispatch pipeline integration', () => {
       const tandemPair = selectTandemPair(classification.taskType, classification.suggestedAgent, ALL_AGENTS);
 
       assert.equal(classification.routeStrategy, 'tandem');
-      assert.deepEqual(tandemPair, { lead: 'gemini', follow: 'claude' });
+      assert.deepEqual(tandemPair, { lead: 'claude', follow: 'codex' });
 
       const leadResult = await mockExecuteAgent(tandemPair.lead, prompt, {});
       const followPrompt = `${leadResult.output}\n\n[follow]\n${prompt}`;
@@ -479,8 +479,8 @@ describe('dispatch pipeline integration', () => {
         routeStrategy: 'tandem',
         taskType: 'security',
         stages: [
-          { agent: 'gemini', ok: true, exitCode: 0 },
-          { agent: 'claude', ok: true, exitCode: 0, receivedLeadOutput: true },
+          { agent: 'claude', ok: true, exitCode: 0 },
+          { agent: 'codex', ok: true, exitCode: 0, receivedLeadOutput: true },
         ],
       });
     });

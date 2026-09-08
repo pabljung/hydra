@@ -101,16 +101,21 @@ describe('AGENT_PRESETS', () => {
     for (const agent of ['claude', 'codex', 'gemini']) {
       const presets = AGENT_PRESETS[agent];
       assert.ok(presets, `Missing presets for ${agent}`);
-      assert.ok(presets.default, `${agent} missing default preset`);
-      assert.ok(presets.fast, `${agent} missing fast preset`);
-      assert.ok(presets.cheap, `${agent} missing cheap preset`);
+      for (const key of ['default', 'fast', 'cheap']) {
+        assert.ok(Object.hasOwn(presets, key), `${agent} missing ${key} preset`);
+      }
     }
   });
 
-  it('preset model IDs exist in profiles', () => {
+  it('presets are independent from optional benchmark profiles', () => {
     for (const [agent, presets] of Object.entries(AGENT_PRESETS)) {
       for (const [key, modelId] of Object.entries(presets)) {
-        assert.ok(MODEL_PROFILES[modelId], `${agent}.${key} = ${modelId} not in profiles`);
+        if (agent === 'gemini') {
+          assert.equal(modelId, null, `unverified ${agent}.${key} should defer to CLI default`);
+        } else {
+          assert.equal(typeof modelId, 'string', `${agent}.${key} must be configurable`);
+          assert.ok(modelId.length > 0, `${agent}.${key} must not be empty`);
+        }
       }
     }
   });
@@ -145,9 +150,9 @@ describe('query functions', () => {
 
   it('getAgentPresets returns correct presets', () => {
     const p = getAgentPresets('claude');
-    assert.equal(p.default, 'claude-sonnet-4-6');
-    assert.equal(p.fast, 'claude-sonnet-4-5-20250929');
-    assert.equal(p.cheap, 'claude-haiku-4-5-20251001');
+    assert.equal(p.default, 'opus');
+    assert.equal(p.fast, 'sonnet');
+    assert.equal(p.cheap, 'sonnet');
   });
 
   it('getAgentPresets returns null for unknown agent', () => {
@@ -158,7 +163,7 @@ describe('query functions', () => {
     const r = getRoleRecommendation('architect');
     assert.ok(r);
     assert.equal(r.agent, 'claude');
-    assert.ok(r.models.includes('claude-opus-4-6'));
+    assert.ok(r.models.includes('opus'));
   });
 
   it('getRoleRecommendation returns null for unknown role', () => {
@@ -198,7 +203,7 @@ describe('query functions', () => {
     assert.ok(roles.architect);
     assert.equal(roles.architect.agent, 'claude');
     assert.ok(recommendations.architect);
-    assert.ok(recommendations.architect.models.includes('claude-opus-4-6'));
+    assert.ok(recommendations.architect.models.includes('opus'));
     assert.ok(recommendations.architect.note);
   });
 
@@ -214,11 +219,11 @@ describe('query functions', () => {
     const map = getReasoningCapsMap();
     assert.ok(map['o4-mini']);
     assert.equal(map['o4-mini'].type, 'effort');
-    assert.ok(map['claude-opus']);
-    assert.equal(map['claude-opus'].type, 'thinking');
+    assert.ok(map['claude-']);
+    assert.equal(map['claude-'].type, 'effort');
     assert.ok(map['gemini-3-pro']);
     assert.equal(map['gemini-3-pro'].type, 'model-swap');
-    assert.equal(map['gpt-5'].type, 'none');
+    assert.equal(map['gpt-'].type, 'effort');
   });
 
   it('getShortName returns short names for known models', () => {
@@ -230,11 +235,10 @@ describe('query functions', () => {
 
   it('getConciergeFallbackChain returns valid chain', () => {
     const chain = getConciergeFallbackChain();
-    assert.ok(chain.length >= 3);
+    assert.ok(chain.length >= 2);
     assert.ok(chain[0].provider);
     assert.ok(chain[0].model);
-    // First should be the concierge model (gpt-5)
-    assert.equal(chain[0].model, 'gpt-5');
+    assert.equal(chain[0].model, 'gpt-5.6-luna');
   });
 
   it('getModeTiers returns all 4 tiers', () => {

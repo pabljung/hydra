@@ -144,7 +144,7 @@ describe('hydra-concierge multi-provider exports', () => {
     const ap = concierge.getActiveProvider();
     assert.ok(ap);
     assert.equal(ap.provider, 'anthropic');
-    assert.equal(ap.model, 'claude-sonnet-4-5-20250929');
+    assert.equal(ap.model, 'claude-sonnet-5');
     assert.equal(ap.isFallback, false);
   });
 

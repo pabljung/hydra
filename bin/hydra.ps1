@@ -145,9 +145,21 @@ Wait-HydraHealthy -TargetUrl $healthUrl -TimeoutSec $WaitTimeoutSec -IntervalMs 
 
 if (-not $SkipHeads) {
   $headScript = Join-Path $hydraRoot "bin\hydra-head.ps1"
-  Start-HydraTerminal -Title "Hydra Head - GEMINI" -Command "pwsh -NoProfile -ExecutionPolicy Bypass -File '$headScript' -Agent gemini -Url '$urlEscaped'"
-  Start-HydraTerminal -Title "Hydra Head - CODEX" -Command "pwsh -NoProfile -ExecutionPolicy Bypass -File '$headScript' -Agent codex -Url '$urlEscaped'"
-  Start-HydraTerminal -Title "Hydra Head - CLAUDE" -Command "pwsh -NoProfile -ExecutionPolicy Bypass -File '$headScript' -Agent claude -Url '$urlEscaped'"
+  if (Get-Command gemini -ErrorAction SilentlyContinue) {
+    Start-HydraTerminal -Title "Hydra Head - GEMINI" -Command "pwsh -NoProfile -ExecutionPolicy Bypass -File '$headScript' -Agent gemini -Url '$urlEscaped'"
+  } else {
+    Write-Output "Hydra Gemini head skipped: Gemini CLI not installed"
+  }
+  if (Get-Command codex -ErrorAction SilentlyContinue) {
+    Start-HydraTerminal -Title "Hydra Head - CODEX" -Command "pwsh -NoProfile -ExecutionPolicy Bypass -File '$headScript' -Agent codex -Url '$urlEscaped'"
+  } else {
+    Write-Output "Hydra Codex head skipped: Codex CLI not installed"
+  }
+  if (Get-Command claude -ErrorAction SilentlyContinue) {
+    Start-HydraTerminal -Title "Hydra Head - CLAUDE" -Command "pwsh -NoProfile -ExecutionPolicy Bypass -File '$headScript' -Agent claude -Url '$urlEscaped'"
+  } else {
+    Write-Output "Hydra Claude head skipped: Claude Code not installed"
+  }
 }
 
 if ($DryRun) {

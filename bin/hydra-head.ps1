@@ -109,37 +109,21 @@ function Get-ModelFlags {
     $agentModels = $config.models.$Agent
     if (-not $agentModels) { return @() }
 
-    $activeKey = if ($agentModels.active) { $agentModels.active } else { "default" }
-
+    $activeKey = if ($agentModels.active) { [string]$agentModels.active } else { "default" }
+    $modelKey = $activeKey
     if ($activeKey -eq "default") {
-      # Resolve through mode tiers
-      $modeName = if ($config.mode) { $config.mode } else { "performance" }
-      $modeTiers = $config.modeTiers
-      if ($modeTiers -and $modeTiers.$modeName) {
-        $tierPreset = $modeTiers.$modeName.$Agent
-        if ($tierPreset -and $tierPreset -ne "default" -and $agentModels.$tierPreset) {
-          $modelId = $agentModels.$tierPreset
-          $defaultId = $agentModels.default
-          if ($modelId -ne $defaultId -or $Agent -eq "codex") {
-            return @("--model", $modelId)
-          }
-        }
-      }
-      # Codex always needs explicit --model (its own config may differ from Hydra's)
-      if ($Agent -eq "codex") {
-        $defaultId = $agentModels.default
-        if ($defaultId) { return @("--model", $defaultId) }
-      }
-      return @()
+      $modeName = if ($config.mode) { [string]$config.mode } else { "performance" }
+      $tierPreset = $config.modeTiers.$modeName.$Agent
+      $modelKey = if ($tierPreset) { [string]$tierPreset } else { "default" }
     }
 
-    # Per-agent override: resolve preset key to full model ID
-    $modelId = if ($agentModels.$activeKey) { $agentModels.$activeKey } else { $activeKey }
-    $defaultId = $agentModels.default
-
-    if ($modelId -ne $defaultId -or $Agent -eq "codex") {
-      return @("--model", $modelId)
+    $modelId = if ($agentModels.$modelKey) { [string]$agentModels.$modelKey } else { $modelKey }
+    $aliases = $config.aliases.$Agent
+    if ($aliases -and $aliases.PSObject.Properties[$modelId]) {
+      $modelId = [string]$aliases.$modelId
     }
+
+    if ($modelId) { return @("--model", $modelId) }
     return @()
   } catch {
     return @()

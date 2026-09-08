@@ -76,38 +76,11 @@ const AGENT_ICONS = { /* ... */ newagent: '\u2605' }; // ★
 
 ## Adding a New Model
 
-1. **Add to `hydra.config.json`**:
-
-```json
-"claude": {
-  "default": "claude-opus-4-6",
-  "fast": "claude-sonnet-4-5-20250929",
-  "cheap": "claude-haiku-4-5-20251001",
-  "experimental": "claude-opus-4-7",  // new preset
-  "active": "default"
-}
-```
-
-2. **Add alias in `hydra-agents.mjs`**:
-
-```js
-const MODEL_ALIASES = {
-  claude: {
-    // ...
-    experimental: 'claude-opus-4-7',
-  },
-};
-```
-
-3. **Add budget in config** (if Claude model):
-
-```json
-"dailyTokenBudget": {
-  "claude-opus-4-7": 3000000
-}
-```
-
-Users can then: `hydra model claude=experimental`
+Model IDs are not registered in a source-code allowlist. Set the ID directly in
+`hydra.config.json`, select it with `:model:select`, or add an optional convenience
+alias under `aliases.<agent>`. Explicit user values are passed unchanged to the CLI,
+which remains the authority on access and validity. Add static profile metadata only
+when Hydra needs richer display, pricing, or recommendation information.
 
 ## Adding a Daemon Endpoint
 

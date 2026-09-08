@@ -160,8 +160,8 @@ test('getAgent returns null for unknown agents', () => {
 test('bestAgentFor returns correct agents for each task type', () => {
   assert.equal(bestAgentFor('planning'), 'claude');
   assert.equal(bestAgentFor('architecture'), 'claude');
-  assert.equal(bestAgentFor('analysis'), 'gemini');
-  assert.equal(bestAgentFor('review'), 'gemini');
+  assert.equal(bestAgentFor('analysis'), 'claude');
+  assert.equal(bestAgentFor('review'), 'claude');
   assert.equal(bestAgentFor('implementation'), 'codex');
   assert.equal(bestAgentFor('testing'), 'codex');
 });

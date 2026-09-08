@@ -20,17 +20,17 @@
   H Y D R A
 ```
 
-Hydra coordinates three AI coding agents — [Gemini CLI](https://github.com/google-gemini/gemini-cli), [Codex CLI](https://github.com/openai/codex), and [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — through a shared HTTP daemon with a task queue, intelligent routing, and structured multi-round deliberation.
+Hydra coordinates available AI coding agents — [Codex CLI](https://github.com/openai/codex), [Claude Code](https://docs.anthropic.com/en/docs/claude-code), and optional [Gemini CLI](https://github.com/google-gemini/gemini-cli) — through a shared HTTP daemon with a task queue, intelligent routing, and structured multi-round deliberation.
 
 ## Why Hydra?
 
-Each AI coding agent has strengths: Claude is a strong architect, Gemini excels at analysis and critique, Codex is a fast implementer. Running them individually means choosing one perspective per task.
+Each AI coding agent has strengths: Claude is a strong architect and reviewer, Codex is a capable implementer and investigator, and Gemini can add another analytical perspective when installed.
 
-Hydra lets you use all three together:
+Hydra lets you combine the agents available on your machine:
 
 - **Route work to the right agent** — a local heuristic classifies your prompt and picks the best agent (or pair, or all three) with zero extra API calls
 - **Run agents in parallel** — headless workers claim tasks from a shared queue and execute concurrently in isolated git worktrees
-- **Multi-round deliberation** — Claude proposes, Gemini critiques, Claude refines, Codex implements
+- **Multi-round deliberation** — preferred participants resolve to installed backends, with Claude and Codex as the default pair
 - **Self-improving pipelines** — nightly automation scans your codebase for TODOs, issues, and improvements, then executes them autonomously with budget tracking and self-healing on failures
 
 ## Requirements
@@ -68,7 +68,7 @@ After installing Hydra, register its MCP server with your AI CLIs:
 hydra setup
 ```
 
-This detects installed CLIs (Claude Code, Gemini CLI, Codex CLI) and registers the Hydra MCP server globally. New CLI sessions will have access to Hydra coordination tools (`hydra_ask`, `hydra_tasks_claim`, `hydra_status`, etc.).
+This detects installed CLIs and registers the Hydra MCP server only where available. Gemini is optional. New CLI sessions will have access to Hydra coordination tools (`hydra_ask`, `hydra_tasks_claim`, `hydra_status`, etc.).
 
 To make a project Hydra-aware (generates per-agent coordination instructions):
 
@@ -106,12 +106,12 @@ hydra setup --uninstall
           +------------+  |  +-----------+
           v               v              v
      +---------+    +-----------+    +--------+
-     | Gemini  |    |  OpenAI   |    | Claude |
-     | (3 Pro) |    | (GPT-5.4) |    | (Opus) |
+     | Gemini  |    |   Codex   |    | Claude |
+     |optional |    | CLI model |    |CLI alias|
      +---------+    +-----------+    +--------+
-       Analyst       Implementer      Architect
+    Optional review  Implementer     Architect/Analyst
 
-  Concierge: OpenAI → Anthropic → Google fallback chain
+  Concierge: configurable provider chain (OpenAI → Anthropic by default)
   Sub-agents: security-reviewer, test-writer, doc-generator,
               researcher, evolve-researcher (virtual → physical)
 ```
@@ -195,7 +195,7 @@ hydra setup --uninstall
 | `:mode smart` | Auto-select model tier per prompt complexity |
 | `:mode handoff` | Direct handoffs (fast, no triage) |
 | `:mode council` | Full council deliberation |
-| `:mode dispatch` | Headless pipeline (Claude→Gemini→Codex) |
+| `:mode dispatch` | Headless pipeline with an installed reviewer between Claude and Codex |
 | `:mode [economy\|balanced\|performance]` | Show or set routing mode. Economy boosts local LLM for impl/testing; performance favors cloud. |
 | `:model` | Show mode & active models |
 | `:model claude=sonnet` | Override agent model |
